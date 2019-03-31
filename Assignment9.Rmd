@@ -1,0 +1,66 @@
+---
+title: "Karuna9"
+author: "Karuna9"
+date: "March 28, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+library(rvest)
+library(ggplot2)
+
+url <- 'https://en.wikipedia.org/wiki/Military_budget_of_the_United_States'
+
+page<-read_html(url)
+
+table_data <- page %>% html_node(".wikitable") %>% html_table()
+
+table_data_transpose <- data.frame(t(table_data))
+
+rownames(table_data_transpose) <- NULL
+
+table_data_transpose <- table_data_transpose[-1,]
+
+colnames(table_data_transpose)<-c("Years","DefenseBudget_Billions","TotalBudget_Trillions","DefenseBudget_Pct","DefenseSpendingChange_Pct")
+
+dependentVariable<-as.numeric(as.character(table_data_transpose$DefenseBudget_Pct))
+independentVariable<-as.numeric(as.character(table_data_transpose$TotalBudget_Trillions))
+
+model<-lm(dependentVariable~independentVariable)
+
+res<-resid(model)
+
+```
+
+```{r}
+
+#Residual Plot
+
+ggplot() + geom_point(aes(x=independentVariable, y=res), colour = "red", size = 3) + 
+   geom_segment(aes(x=independentVariable, xend=independentVariable, y=0, yend=res))+geom_hline(yintercept = 0)
+```
+
+```{r}
+#Model Summary
+
+summary(model)
+
+# The intercept term here is 16.5742 and with a very low p value the coefficient is statistically significant as well
+
+# The coefficient of the independent term is 0.6569 but the p value is very high this the coefficient is not statistically significant
+
+```
+
+
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
